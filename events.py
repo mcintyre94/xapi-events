@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import requests
 import XenAPI
 import sys
 
@@ -8,6 +9,8 @@ session.login_with_password("","")
 session.xenapi.event.register(["VM"]) # register for events in the pool and VM objects 
 
 vm_power_states = {}
+
+url = "http://localhost:5000/api/cc/CMXS9/power-state-changed"
 
 while True:
   try:
@@ -21,6 +24,9 @@ while True:
         if vm_name not in vm_power_states or vm_power_states[vm_name] != vm_power:
           print("%s power state changed to %s" % (vm_name, vm_power))
           vm_power_states[vm_name] = vm_power
+
+          payload = {'VM': vm_name, 'power_state': vm_power}
+          requests.post(url, json=payload)
         
   except XenAPI.Failure as e:
     if len(e.details) > 0 and e.details[0] == 'EVENTS_LOST':
